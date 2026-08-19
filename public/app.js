@@ -305,7 +305,7 @@ function sortStations(stations, sortBy) {
 
 // ─── Stations renderen ────────────────────────────────────────────────────────
 
-function renderStations(containerEl, stations, extraBadge = null, onSelect = null, selectedStation = null) {
+function renderStations(containerEl, stations, extraBadge = null, onSelect = null, selectedStation = null, globalMaxPrice = null) {
   containerEl.innerHTML = "";
   if (!stations.length) {
     containerEl.innerHTML = `<p class="empty">Geen stations gevonden.</p>`;
@@ -313,7 +313,7 @@ function renderStations(containerEl, stations, extraBadge = null, onSelect = nul
   }
 
   const minPrice = Math.min(...stations.map(s => s.price));
-  const maxPrice = Math.max(...stations.map(s => s.price));
+  const maxPrice = globalMaxPrice ?? Math.max(...stations.map(s => s.price));
 
   stations.forEach((s, i) => {
     const card = document.createElement("div");
@@ -623,7 +623,7 @@ function renderNearbyList() {
   renderStations(listEl, filtered, null, s => {
     nearbySelected = s;
     nearbyViewToggleEl.querySelector('[data-view="map"]')?.click();
-  }, nearbySelected);
+  }, nearbySelected, nearbyMaxPrice);
 }
 
 function renderNearby() {
@@ -632,7 +632,7 @@ function renderNearby() {
   renderStations(listEl, filtered, null, s => {
     nearbySelected = s;
     nearbyViewToggleEl.querySelector('[data-view="map"]')?.click();
-  }, nearbySelected);
+  }, nearbySelected, nearbyMaxPrice);
   renderNearbyMap(filtered);
 }
 
@@ -836,7 +836,7 @@ function renderRouteList() {
   renderStations(routeListEl, filtered,
     s => s.routeOffset != null ? `${s.routeOffset.toFixed(1)} km van de route` : "",
     s => { routeSelected = s; routeViewToggleEl.querySelector('[data-view="map"]')?.click(); },
-    routeSelected);
+    routeSelected, routeMaxPrice);
 }
 
 function renderRoute() {
@@ -845,7 +845,7 @@ function renderRoute() {
   renderStations(routeListEl, filtered,
     s => s.routeOffset != null ? `${s.routeOffset.toFixed(1)} km van de route` : "",
     s => { routeSelected = s; routeViewToggleEl.querySelector('[data-view="map"]')?.click(); },
-    routeSelected);
+    routeSelected, routeMaxPrice);
   renderRouteMap(filtered);
 }
 
