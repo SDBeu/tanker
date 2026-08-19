@@ -30,6 +30,11 @@ let routePulseMarker  = null;
 let nearbySearchPos  = null;        // locatie gebruikt voor nabijheidszoektocht (GPS of geocoded)
 let nearbyPriceMax   = Infinity;   // prijsfilter slider
 let routePriceMax    = Infinity;
+let nearbyMinPrice   = null;
+let nearbyMaxPrice   = null;
+let routeMinPrice    = null;
+let routeMaxPrice    = null;
+let tankLiters       = 50;
 let nearbyView       = "map";     // "map" | "list"
 let routeView        = "map";     // "map" | "list"
 let nearbyMap        = null;
@@ -73,6 +78,10 @@ const routeFormFields    = document.getElementById("route-form-fields");
 const routeFormSummary   = document.getElementById("route-form-summary");
 const routeSummaryText   = document.getElementById("route-summary-text");
 const routeEditBtn       = document.getElementById("route-edit-btn");
+const savingsDisplayEl   = document.getElementById("savings-display");
+const savingsCanEl       = document.getElementById("savings-can");
+const savingsAmountEl    = document.getElementById("savings-amount");
+const tankLitersInput    = document.getElementById("tank-liters");
 
 // ─── Cache ────────────────────────────────────────────────────────────────────
 
@@ -389,19 +398,29 @@ function applyPriceFilter(markerList, layerGroup, maxPrice, extraLayer) {
 }
 
 function buildPriceSlider(wrapEl, markerList, layerGroup, minPrice, maxPrice, extraLayer, onFilter = null) {
+  const minColor = priceColor(minPrice, minPrice, maxPrice);
+  const maxColor = priceColor(maxPrice, minPrice, maxPrice);
   wrapEl.classList.remove("hidden");
   wrapEl.innerHTML = `
-    <span class="slider-label">€ ${minPrice.toFixed(3)}</span>
+    <span class="slider-label" style="color:${minColor}">€ ${minPrice.toFixed(3)}</span>
     <input type="range" class="price-range"
       min="${minPrice.toFixed(3)}" max="${maxPrice.toFixed(3)}"
       value="${maxPrice.toFixed(3)}" step="0.001">
-    <span class="slider-label slider-max">€ <strong>${maxPrice.toFixed(3)}</strong></span>
+    <span class="slider-label slider-max">€ <strong style="color:${maxColor}">${maxPrice.toFixed(3)}</strong></span>
   `;
   const range  = wrapEl.querySelector(".price-range");
   const strong = wrapEl.querySelector("strong");
+  const updateColor = v => {
+    const c = priceColor(v, minPrice, maxPrice);
+    strong.style.color = c;
+    const svg = `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><path d="M50 5 C50 5 10 55 10 75 C10 97 28 115 50 115 C72 115 90 97 90 75 C90 55 50 5 50 5Z" fill="${c}"/><ellipse cx="38" cy="52" rx="7" ry="11" fill="rgba(255,255,255,0.25)" transform="rotate(-20 38 52)"/><text x="50" y="95" text-anchor="middle" font-size="38" font-weight="700" fill="%230f172a" font-family="sans-serif">€</text></svg>`;
+    range.style.setProperty("--thumb-image", `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+  };
+  updateColor(maxPrice);
   range.addEventListener("input", () => {
     const v = parseFloat(range.value);
     strong.textContent = v.toFixed(3);
+    updateColor(v);
     if (markerList && layerGroup) applyPriceFilter(markerList, layerGroup, v, extraLayer);
     if (onFilter) onFilter(v);
   });
@@ -448,8 +467,58 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
       if (btn.dataset.tab === "nearby" && nearbyMap) nearbyMap.invalidateSize();
       if (btn.dataset.tab === "route"  && routeMap)  routeMap.invalidateSize();
     }, 50);
+    updateSavings();
   });
 });
+
+// ─── Besparing ────────────────────────────────────────────────────────────────
+
+function makeSavingsSVG(fillPct, color, line1 = null, line2 = null, sizePx = null) {
+  const bX = 3, bY = 10, bW = 28, bH = 39;
+  const fillH = Math.round(bH * fillPct);
+  const fillY = bY + bH - fillH;
+  const fill = fillH > 1
+    ? `<rect x="${bX + 1}" y="${Math.max(fillY, bY + 1)}" width="${bW - 2}" height="${Math.min(fillH - 1, bH - 2)}" rx="2" fill="${color}" opacity="0.9"/>`
+    : "";
+  const textMid = bY + bH / 2;
+  const labels = line1 ? `
+    <text x="17" y="${textMid - 2}" text-anchor="middle" font-size="7.5" font-weight="700" fill="white" font-family="sans-serif" opacity="0.95">${line1}</text>
+    ${line2 ? `<text x="17" y="${textMid + 8}" text-anchor="middle" font-size="6.5" fill="white" font-family="sans-serif" opacity="0.8">${line2}</text>` : ""}
+  ` : "";
+  const sizeAttr = sizePx ? `width="${sizePx[0]}" height="${sizePx[1]}"` : "";
+  return `<svg ${sizeAttr} viewBox="0 0 34 52" xmlns="http://www.w3.org/2000/svg">
+    <path d="M21 6 Q30 6 30 15" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="7" y="3" width="12" height="9" rx="2" fill="#334155"/>
+    <rect x="${bX}" y="${bY}" width="${bW}" height="${bH}" rx="4" fill="#1e293b"/>
+    ${fill}
+    <rect x="${bX}" y="${bY}" width="${bW}" height="${bH}" rx="4" fill="none" stroke="#475569" stroke-width="1.5"/>
+    <rect x="7" y="13" width="3" height="33" rx="1.5" fill="rgba(255,255,255,0.07)"/>
+    ${labels}
+  </svg>`;
+}
+
+function updateSavings() {
+  const tab = document.querySelector(".tab-btn.active")?.dataset.tab ?? "route";
+  const sliderEl = tab === "nearby" ? nearbySliderEl : routeSliderEl;
+  const range = sliderEl?.querySelector(".price-range");
+  const minP = tab === "nearby" ? nearbyMinPrice : routeMinPrice;
+  const maxP = tab === "nearby" ? nearbyMaxPrice : routeMaxPrice;
+
+  if (!range || minP === null || maxP === null) {
+    savingsDisplayEl.classList.add("hidden");
+    return;
+  }
+
+  const sliderVal = parseFloat(range.value);
+  const savings = (maxP - sliderVal) * tankLiters;
+  const fillPct = maxP === minP ? 0 : (maxP - sliderVal) / (maxP - minP);
+  const color = fillPct < 0.01 ? `hsl(0, 75%, 42%)` : `hsl(${Math.round(120 * fillPct)}, 75%, 42%)`;
+
+  savingsDisplayEl.classList.remove("hidden");
+  savingsCanEl.innerHTML = makeSavingsSVG(fillPct, color);
+  savingsAmountEl.textContent = savings > 0.005 ? `€ ${savings.toFixed(2)}` : "";
+  savingsAmountEl.style.color = color;
+}
 
 // ─── Tab 1: In de buurt ───────────────────────────────────────────────────────
 
@@ -494,14 +563,20 @@ function renderNearbyMap(stations) {
     const cheapest = s.price === minPrice;
     const t = maxPrice === minPrice ? 0 : (s.price - minPrice) / (maxPrice - minPrice);
     const color = priceColor(s.price, minPrice, maxPrice);
-    const marker = L.marker([s.lat, s.lng], { icon: createPinIcon(color, cheapest, t) }).bindPopup(`
-      <div class="map-popup">
+    const marker = L.marker([s.lat, s.lng], { icon: createPinIcon(color, cheapest, t) }).bindPopup(() => {
+      const savings = (maxPrice - s.price) * tankLiters;
+      const fillPct = maxPrice === minPrice ? 0 : (maxPrice - s.price) / (maxPrice - minPrice);
+      const savingsHtml = savings > 0.005
+        ? `<div class="popup-can">${makeSavingsSVG(fillPct, color, `€ ${savings.toFixed(2)}`, `${tankLiters}L`, [68, 104])}</div>`
+        : "";
+      return `<div class="map-popup">
         <div class="popup-name">${s.name}</div>
         <div class="popup-price" style="color:${color}">€ ${s.price.toFixed(3)}</div>
+        ${savingsHtml}
         <div class="popup-address">${s.address || ""}</div>
         <a class="nav-btn" href="${googleMapsNav(s.lat, s.lng)}" target="_blank" rel="noopener">Navigeer</a>
-      </div>
-    `);
+      </div>`;
+    });
     marker.on("click", () => {
       if (nearbyPulseMarker) { nearbyMarkers.removeLayer(nearbyPulseMarker); nearbyPulseMarker = null; }
       nearbySelected = null;
@@ -515,10 +590,14 @@ function renderNearbyMap(stations) {
   if (nearbySearchPos) bounds.push([nearbySearchPos.lat, nearbySearchPos.lng]);
 
   if (minPrice !== null) {
+    nearbyMinPrice = minPrice;
+    nearbyMaxPrice = maxPrice;
     buildPriceSlider(nearbySliderEl, nearbyMarkerList, nearbyMarkers, minPrice, maxPrice, nearbyGpsMarker, v => {
       nearbyPriceMax = v;
       renderNearbyList();
+      updateSavings();
     });
+    updateSavings();
   }
   setTimeout(() => {
     nearbyMap.invalidateSize();
@@ -684,14 +763,20 @@ function renderRouteMap(stations) {
     const cheapest = s.price === minPrice;
     const t = maxPrice === minPrice ? 0 : (s.price - minPrice) / (maxPrice - minPrice);
     const color = priceColor(s.price, minPrice, maxPrice);
-    const marker = L.marker([s.lat, s.lng], { icon: createPinIcon(color, cheapest, t) }).bindPopup(`
-      <div class="map-popup">
+    const marker = L.marker([s.lat, s.lng], { icon: createPinIcon(color, cheapest, t) }).bindPopup(() => {
+      const savings = (maxPrice - s.price) * tankLiters;
+      const fillPct = maxPrice === minPrice ? 0 : (maxPrice - s.price) / (maxPrice - minPrice);
+      const savingsHtml = savings > 0.005
+        ? `<div class="popup-can">${makeSavingsSVG(fillPct, color, `€ ${savings.toFixed(2)}`, `${tankLiters}L`, [68, 104])}</div>`
+        : "";
+      return `<div class="map-popup">
         <div class="popup-name">${s.name}</div>
         <div class="popup-price" style="color:${color}">€ ${s.price.toFixed(3)}</div>
+        ${savingsHtml}
         <div class="popup-address">${s.address || ""}</div>
         <a class="nav-btn" href="${googleMapsNav(s.lat, s.lng)}" target="_blank" rel="noopener">Navigeer</a>
-      </div>
-    `);
+      </div>`;
+    });
     marker.on("click", () => {
       if (routePulseMarker) { routeMarkers.removeLayer(routePulseMarker); routePulseMarker = null; }
       routeSelected = null;
@@ -702,10 +787,14 @@ function renderRouteMap(stations) {
   });
 
   if (minPrice !== null) {
+    routeMinPrice = minPrice;
+    routeMaxPrice = maxPrice;
     buildPriceSlider(routeSliderEl, routeMarkerList, routeMarkers, minPrice, maxPrice, null, v => {
       routePriceMax = v;
       renderRouteList();
+      updateSavings();
     });
+    updateSavings();
   }
   setTimeout(() => {
     routeMap.invalidateSize();
@@ -987,3 +1076,8 @@ if (!navigator.geolocation) {
 
 // Route kaart meteen initialiseren zodat het startscherm niet leeg is
 initRouteMap();
+
+tankLitersInput.addEventListener("input", () => {
+  tankLiters = Math.max(1, parseInt(tankLitersInput.value) || 50);
+  updateSavings();
+});

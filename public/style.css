@@ -27,12 +27,68 @@ body {
 header {
   padding: 0.9rem 1.25rem 0.7rem;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 header h1 {
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.header-logo {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+}
+
+#savings-display {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+#savings-can {
+  display: flex;
+  align-items: center;
+}
+
+#savings-can svg {
+  width: 18px;
+  height: 28px;
+  display: block;
+}
+
+#tank-liters {
+  width: 3rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+#tank-liters::-webkit-outer-spin-button,
+#tank-liters::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.savings-unit {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+#savings-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 /* Tabs */
@@ -478,20 +534,29 @@ input[type="text"]::placeholder {
 
 .price-range::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--bg);
+  width: 22px;
+  height: 26px;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: var(--thumb-image);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
   cursor: pointer;
+  transition: background-image 0.15s;
 }
 
 .price-range::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--bg);
+  width: 22px;
+  height: 26px;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: var(--thumb-image);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
   cursor: pointer;
 }
 
@@ -691,6 +756,12 @@ input[type="text"]::placeholder {
   font-weight: 700;
   color: #d97706;
   margin: 0.15rem 0;
+}
+
+.popup-can {
+  display: flex;
+  justify-content: center;
+  margin: 0.4rem 0 0.3rem;
 }
 
 /* popup-price kleur wordt inline gezet via gradient */

@@ -7,12 +7,26 @@
   <meta name="description" content="Tanker — vind de goedkoopste tankstations in de buurt" />
   <title>Tanker</title>
   <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" href="/icon-192.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header>
-    <h1>Tanker</h1>
+    <h1>
+      <svg class="header-logo" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M50 5 C50 5 10 55 10 75 C10 97 28 115 50 115 C72 115 90 97 90 75 C90 55 50 5 50 5Z" fill="#f59e0b"/>
+        <ellipse cx="38" cy="52" rx="7" ry="11" fill="rgba(255,255,255,0.25)" transform="rotate(-20 38 52)"/>
+        <text x="50" y="95" text-anchor="middle" font-size="38" font-weight="700" fill="#0f172a" font-family="sans-serif">€</text>
+      </svg>
+      Tanker
+    </h1>
+    <div id="savings-display" class="hidden">
+      <span id="savings-can"></span>
+      <input type="number" id="tank-liters" value="50" min="1" max="999">
+      <span class="savings-unit">L</span>
+      <span id="savings-amount"></span>
+    </div>
   </header>
 
   <nav id="tabs">
