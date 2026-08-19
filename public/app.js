@@ -322,6 +322,11 @@ function renderStations(containerEl, stations, extraBadge = null, onSelect = nul
     card.className = "station-card" + (s.price === minPrice ? " cheapest" : "") + (isSelected ? " selected" : "");
 
     const badge = extraBadge ? extraBadge(s) : "";
+    const savings = (maxPrice - s.price) * tankLiters;
+    const fillPct = maxPrice === minPrice ? 0 : (maxPrice - s.price) / (maxPrice - minPrice);
+    const savingsHtml = savings > 0.005
+      ? `<div class="card-savings">${makeSavingsSVG(fillPct, color, null, null, [16, 25])} <span style="color:${color}">€ ${savings.toFixed(2)}</span></div>`
+      : "";
 
     card.innerHTML = `
       <div class="rank" style="color:${color}">${i + 1}</div>
@@ -332,6 +337,7 @@ function renderStations(containerEl, stations, extraBadge = null, onSelect = nul
       </div>
       <div class="right">
         <div class="price" style="color:${color}">€ ${s.price.toFixed(3)}</div>
+        ${savingsHtml}
         <div class="distance">${s.routePosition != null ? `bij km ${Math.round(s.routePosition)}` : formatDist(s.distance ?? s.routeOffset)}</div>
         <a class="nav-btn" href="${googleMapsNav(s.lat, s.lng)}" target="_blank" rel="noopener">Navigeer</a>
       </div>

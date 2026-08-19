@@ -353,6 +353,16 @@ header h1 {
   margin-top: 0.1rem;
 }
 
+.card-savings {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin-top: 0.1rem;
+}
+
 /* Route form */
 #route-form {
   padding: 0.9rem 1.25rem 0.75rem;
