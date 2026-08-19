@@ -111,8 +111,19 @@ Korte log van wat er per sessie gebouwd of gewijzigd is.
 
 ### Besparingsindicator in de lijst
 - Elke stationskaart in de lijstweergave toont een kleine jerrycan (16 × 25 px) + `€ X.XX`
-- Berekend t.o.v. het duurste station in de huidige lijst × tankinhoud
+- Berekend t.o.v. de **globale max** (duurste station bij laden) × tankinhoud
 - Kleur volgt de prijs-gradient (groen = goedkoop, rood = duur)
+
+### Consistentie besparingsreferentie (bugfix)
+- Probleem: popup, lijst en header gebruikten elk een ander referentiepunt → tegenstrijdige bedragen
+- Oplossing: vaste referentie = `globalMax` (duurste station bij laden van de set, verandert niet)
+  - **Popup**: (globalMax − station.price) × liters
+  - **Lijst**: (globalMax − station.price) × liters — via `globalMaxPrice` parameter in `renderStations()`
+  - **Header**: (globalMax − sliderwaarde) × liters = *minimale* besparing van elk zichtbaar station
+    - Slider helemaal rechts (= globalMax): header = € 0
+    - Slider schuift naar links: header stijgt
+    - Elk station in de lijst bespaart altijd ≥ header (want station.price ≤ sliderwaarde)
+- `og-image.png` was beschadigd (geen geldige PNG) → opnieuw gegenereerd via Playwright screenshot 1200×630 px
 
 ### Slider duimknop als jerrycan
 - Slider-duimknop heeft een jerrycan-SVG als achtergrondafbeelding
