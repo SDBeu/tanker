@@ -1,0 +1,13 @@
+# Local Netlify folder
+.netlify
+
+# Dependencies
+node_modules/
+
+# Screenshots en testafbeeldingen
+*.png
+
+# Claude interne bestanden
+.claude/
+.playwright-mcp/
+.obsidian/

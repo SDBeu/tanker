@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f59e0b" />
+  <meta name="description" content="Tanker — vind de goedkoopste tankstations in de buurt" />
+  <title>Tanker</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Tanker</h1>
+  </header>
+
+  <nav id="tabs">
+    <button class="tab-btn active" data-tab="route">Langs route</button>
+    <button class="tab-btn" data-tab="nearby">In de buurt</button>
+  </nav>
+
+  <!-- Tab: in de buurt -->
+  <div id="tab-nearby" class="tab-panel hidden">
+    <div class="sidebar">
+      <div id="controls">
+        <div class="input-row">
+          <div class="input-wrap">
+            <input type="text" id="nearby-location" placeholder="Adres of stad..." autocomplete="off" />
+            <button class="clear-btn" type="button" aria-label="Wissen">&#xd7;</button>
+          </div>
+          <button id="nearby-gps-btn" title="Gebruik mijn locatie">&#9678;</button>
+        </div>
+      </div>
+      <div id="fuel-btns"></div>
+      <div id="sort-btns"></div>
+      <div id="nearby-meta">
+        <div id="status"></div>
+        <div id="nearby-view-toggle" class="hidden"></div>
+      </div>
+      <div id="nearby-price-slider" class="price-slider-wrap hidden"></div>
+      <div id="list" class="hidden"></div>
+    </div>
+    <div class="sidebar-resizer"></div>
+    <div id="nearby-map" class="map-container"></div>
+  </div>
+
+  <!-- Tab: route -->
+  <div id="tab-route" class="tab-panel">
+    <div class="sidebar">
+      <div id="route-form">
+        <div id="route-form-fields">
+          <div class="field">
+            <label for="route-start">Vertrek</label>
+            <div class="input-row">
+              <div class="input-wrap">
+                <input type="text" id="route-start" placeholder="Adres of stad..." autocomplete="off" />
+                <button class="clear-btn" type="button" aria-label="Wissen">&#xd7;</button>
+              </div>
+              <button id="use-gps-btn" title="Gebruik mijn locatie">&#9678;</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="route-end">Bestemming</label>
+            <div class="input-wrap">
+              <input type="text" id="route-end" placeholder="Adres of stad..." autocomplete="off" />
+              <button class="clear-btn" type="button" aria-label="Wissen">&#xd7;</button>
+            </div>
+          </div>
+          <button id="calc-route-btn">Bereken route</button>
+        </div>
+        <div id="route-form-summary" class="hidden">
+          <span id="route-summary-text"></span>
+          <button id="route-edit-btn" title="Route aanpassen">Wijzig</button>
+        </div>
+      </div>
+      <div id="route-fuel-btns"></div>
+      <div id="route-meta">
+        <div id="route-status"></div>
+        <div id="route-info"></div>
+        <div id="route-view-toggle" class="hidden"></div>
+      </div>
+      <div id="route-sort-btns" class="hidden"></div>
+      <div id="route-price-slider" class="price-slider-wrap hidden"></div>
+      <div id="route-list" class="hidden"></div>
+    </div>
+    <div class="sidebar-resizer"></div>
+    <div id="route-map" class="map-container hidden"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

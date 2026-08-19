@@ -1,0 +1,703 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --border: #334155;
+  --accent: #f59e0b;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --green: #22c55e;
+  --red: #ef4444;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  padding: 0.9rem 1.25rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Tabs */
+#tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.65rem 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tab-panel.hidden {
+  display: none;
+}
+
+/* Nearby tab controls */
+#controls {
+  padding: 0.6rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+#controls .input-row {
+  flex: 1;
+}
+
+#nearby-gps-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Verborgen */
+.hidden {
+  display: none !important;
+}
+
+/* Fuel en sort knoppen (gedeeld) */
+#fuel-btns,
+#sort-btns,
+#route-fuel-btns,
+#route-sort-btns {
+  padding: 0.5rem 1rem;
+  display: flex;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.fuel-btn {
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.fuel-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* Nearby meta-balk: status + toggle op één rij */
+#nearby-meta {
+  display: flex;
+  align-items: center;
+  gap: 0 0.5rem;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid var(--border);
+  min-height: 2.2rem;
+}
+
+#nearby-meta #nearby-view-toggle {
+  margin-left: auto;
+  border-bottom: none;
+  padding: 0;
+  display: flex;
+}
+
+/* Status (tab 1) */
+#status {
+  font-size: 0.83rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+#status.error {
+  color: var(--red);
+}
+
+/* Route meta-balk: status + km/min + kaart/lijst op één rij */
+#route-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 0.5rem;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--muted);
+  min-height: 2.2rem;
+}
+
+#route-status {
+  flex-shrink: 0;
+}
+
+#route-status.error {
+  color: var(--red);
+}
+
+#route-info {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+#route-info span {
+  color: var(--text);
+  font-weight: 600;
+}
+
+#route-view-toggle {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+/* Lijsten */
+#list,
+#route-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+/* Station kaart */
+.station-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+
+.station-card {
+  cursor: pointer;
+}
+
+.station-card:hover {
+  border-color: var(--accent);
+}
+
+.station-card.cheapest {
+  border-color: var(--green);
+}
+
+.station-card.selected {
+  border-color: var(--accent);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.rank {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--muted);
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+/* rank kleur wordt inline gezet via gradient */
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.address {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 0.12rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  font-size: 0.7rem;
+  color: var(--accent);
+  margin-top: 0.12rem;
+}
+
+.right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.price {
+  font-size: 1.15rem;
+  font-weight: 700;
+  /* kleur wordt inline gezet via gradient */
+}
+
+.distance {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 0.1rem;
+}
+
+/* Route form */
+#route-form {
+  padding: 0.9rem 1.25rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+#route-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+#route-form-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#route-summary-text {
+  flex: 1;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#route-edit-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.input-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.input-wrap input[type="text"] {
+  flex: 1;
+  padding-right: 2rem;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.15rem 0.2rem;
+  display: none;
+}
+
+.clear-btn.visible {
+  display: block;
+}
+
+input[type="text"] {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+input[type="text"]::placeholder {
+  color: var(--muted);
+}
+
+#use-gps-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+#calc-route-btn {
+  width: 100%;
+  padding: 0.65rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+#calc-route-btn:hover {
+  opacity: 0.85;
+}
+
+#calc-route-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+
+/* Prijsslider */
+.price-slider-wrap {
+  padding: 0.55rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.slider-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.slider-label strong {
+  color: var(--accent);
+}
+
+.slider-max {
+  text-align: right;
+}
+
+.price-range {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+
+.price-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  cursor: pointer;
+}
+
+.price-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  cursor: pointer;
+}
+
+/* Pulserende selectiering op kaart */
+.pulse-ring {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2.5px solid var(--accent);
+  box-sizing: border-box;
+  animation: pulse-ring 1.2s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* Merkfilter — inline in brandstofpills-rij */
+.brand-select {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  padding: 0.3rem 0.55rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.brand-select:focus,
+.brand-select.active {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.4rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 3rem;
+  font-size: 0.9rem;
+}
+
+/* View toggle tab 1 (standalone) */
+#nearby-view-toggle {
+  padding: 0.6rem 1.25rem;
+  display: flex;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* View toggle tab 2: zit in #route-meta, geen eigen padding/border */
+#route-view-toggle {
+  display: flex;
+  gap: 0.3rem;
+}
+
+/* Kaartcontainer */
+.map-container {
+  flex: 1;
+  min-height: 300px;
+}
+
+/* Navigeerknop op lijstkaart */
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid var(--accent);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  transition: all 0.15s;
+}
+
+.nav-btn:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+/* ─── Desktop layout (≥ 768px) ─────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  /* Vaste hoogte zodat kaart viewport vult in plaats van content */
+  body {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .tab-panel {
+    flex-direction: row;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .sidebar {
+    width: 480px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  /* Versleepbare scheidingsbalk */
+  .sidebar-resizer {
+    width: 12px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .sidebar-resizer::after {
+    content: "⋮";
+    color: var(--muted);
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  .sidebar-resizer:hover,
+  .sidebar-resizer.dragging {
+    background: var(--accent);
+  }
+
+  .sidebar-resizer:hover::after,
+  .sidebar-resizer.dragging::after {
+    color: #000;
+  }
+
+  /* Kaart vult de resterende breedte en volledige hoogte */
+  .map-container {
+    min-height: unset;
+    min-width: 0;
+    width: 0; /* laat flex-grow de breedte bepalen */
+  }
+
+  /* Toon kaart + lijst altijd tegelijk op desktop */
+  #nearby-map.hidden { display: flex !important; }
+  #list.hidden       { display: flex !important; }
+  #route-list.hidden { display: flex !important; }
+
+  /* Sorteerknopjes altijd zichtbaar in sidebar */
+  #sort-btns.hidden       { display: flex !important; }
+  #route-sort-btns.hidden { display: flex !important; }
+
+  /* Prijsslider altijd zichtbaar in sidebar */
+  #nearby-price-slider.hidden { display: flex !important; }
+  #route-price-slider.hidden  { display: flex !important; }
+
+  /* View toggle overbodig op desktop */
+  #nearby-view-toggle,
+  #route-view-toggle { display: none !important; }
+}
+
+/* Leaflet popup stijl */
+.map-popup {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  min-width: 160px;
+}
+
+.popup-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.15rem;
+}
+
+
+.popup-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #d97706;
+  margin: 0.15rem 0;
+}
+
+/* popup-price kleur wordt inline gezet via gradient */
+
+.popup-address {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
