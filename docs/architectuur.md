@@ -44,9 +44,19 @@ Externe diensten (rechtstreeks vanuit browser, geen CORS-probleem):
 ## Frontend (public/)
 
 - `index.html` — twee tabs: "In de buurt" en "Langs route"
+  - Open Graph meta-tags voor link previews (Teams, WhatsApp, Signal)
+  - SVG favicon als primaire favicon, PNG fallback
+  - `#savings-display` in header: jerrycan SVG + tankinhoud input + besparingsbedrag
 - `app.js` — alle logica, vanilla JS
+  - `positionOnRoute(lat, lng, coords)` — projecteert station op routesegment via dot-product
+  - `makeSavingsSVG(fillPct, color, line1, line2, sizePx)` — jerrycan SVG met vulniveau en optionele tekst
+  - `updateSavings()` — leest actieve slider, berekent besparing, updatet header
+  - `renderStations()` — toont besparing per kaart (klein jerrycannetje + bedrag)
+  - Leaflet `bindPopup(function)` — dynamische popup-inhoud bij elke opening
 - `style.css` — mobiel-first dark theme
 - `manifest.json` — PWA installeerbaar maken
+- `favicon.svg` — donkerblauwe achtergrond, amber druppel met €
+- `og-image.png` — Open Graph preview-afbeelding
 
 ## Backend (netlify/functions/)
 
