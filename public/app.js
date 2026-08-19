@@ -235,6 +235,25 @@ function distToRoute(lat, lng, coords) {
   return min;
 }
 
+// Berekent hoeveel km langs de route het dichtstbijzijnde punt ligt (vanaf het startpunt)
+function positionOnRoute(lat, lng, coords) {
+  let minDist = Infinity;
+  let bestPos = 0;
+  let cumDist = 0;
+  for (let i = 1; i < coords.length; i++) {
+    const [lng1, lat1] = coords[i - 1];
+    const [lng2, lat2] = coords[i];
+    const segLen = haversine(lat1, lng1, lat2, lng2);
+    const dx = lng2 - lng1, dy = lat2 - lat1;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 > 0 ? Math.max(0, Math.min(1, ((lng - lng1) * dx + (lat - lat1) * dy) / len2)) : 0;
+    const d = haversine(lat, lng, lat1 + t * dy, lng1 + t * dx);
+    if (d < minDist) { minDist = d; bestPos = cumDist + t * segLen; }
+    cumDist += segLen;
+  }
+  return bestPos;
+}
+
 function sampleRoute(coords, intervalKm, minPoints = 1) {
   // Bereken totale routelengte
   let totalKm = 0;
@@ -268,7 +287,7 @@ function sampleRoute(coords, intervalKm, minPoints = 1) {
 function sortStations(stations, sortBy) {
   const copy = [...stations];
   if (sortBy === "distance") {
-    copy.sort((a, b) => (a.distance ?? a.routeOffset ?? Infinity) - (b.distance ?? b.routeOffset ?? Infinity));
+    copy.sort((a, b) => (a.routePosition ?? a.distance ?? a.routeOffset ?? Infinity) - (b.routePosition ?? b.distance ?? b.routeOffset ?? Infinity));
   } else {
     copy.sort((a, b) => a.price - b.price);
   }
@@ -304,7 +323,7 @@ function renderStations(containerEl, stations, extraBadge = null, onSelect = nul
       </div>
       <div class="right">
         <div class="price" style="color:${color}">€ ${s.price.toFixed(3)}</div>
-        <div class="distance">${formatDist(s.distance ?? s.routeOffset)}</div>
+        <div class="distance">${s.routePosition != null ? `bij km ${Math.round(s.routePosition)}` : formatDist(s.distance ?? s.routeOffset)}</div>
         <a class="nav-btn" href="${googleMapsNav(s.lat, s.lng)}" target="_blank" rel="noopener">Navigeer</a>
       </div>
     `;
@@ -340,10 +359,10 @@ function buildFuelBtns(containerEl, getActive, setActive, onChange) {
   });
 }
 
-function buildSortBtns(containerEl, getSort, setSort, onSort) {
+function buildSortBtns(containerEl, getSort, setSort, onSort, distLabel = "Afstand") {
   containerEl.innerHTML = "";
   containerEl.classList.remove("hidden");
-  [{ id: "price", label: "Prijs" }, { id: "distance", label: "Afstand" }].forEach(({ id, label }) => {
+  [{ id: "price", label: "Prijs" }, { id: "distance", label: distLabel }].forEach(({ id, label }) => {
     const btn = document.createElement("button");
     btn.className = "fuel-btn" + (id === getSort() ? " active" : "");
     btn.dataset.sort = id;
@@ -442,6 +461,17 @@ function initNearbyMap() {
     maxZoom: 19,
   }).addTo(nearbyMap);
   nearbyMarkers = L.layerGroup().addTo(nearbyMap);
+}
+
+function showNearbyDot(pos) {
+  initNearbyMap();
+  nearbyMap.setView([pos.lat, pos.lng], 13);
+  setTimeout(() => {
+    if (nearbyGpsMarker) nearbyMarkers.removeLayer(nearbyGpsMarker);
+    nearbyGpsMarker = L.circleMarker([pos.lat, pos.lng], {
+      radius: 8, fillColor: "#3b82f6", color: "#fff", weight: 2, fillOpacity: 1,
+    }).bindPopup("Gezochte locatie").addTo(nearbyMarkers);
+  }, 50);
 }
 
 function renderNearbyMap(stations) {
@@ -577,6 +607,7 @@ function getGPS() {
       nearbySearchPos = gpsPosition;
       nearbyLocationInput.value = "Huidige locatie";
       nearbyLocationInput.disabled = false;
+      showNearbyDot(nearbySearchPos);
       loadNearby();
     },
     err => {
@@ -593,6 +624,7 @@ nearbyGpsBtn.addEventListener("click", () => {
   if (gpsPosition) {
     nearbySearchPos = gpsPosition;
     nearbyLocationInput.value = "Huidige locatie";
+    showNearbyDot(nearbySearchPos);
     loadNearby();
     return;
   }
@@ -605,6 +637,7 @@ nearbyLocationInput.addEventListener("keydown", async e => {
   if (!val) return;
   try {
     nearbySearchPos = await geocode(val);
+    showNearbyDot(nearbySearchPos);
     loadNearby();
   } catch (err) {
     setStatus(statusEl, err.message, true);
@@ -623,7 +656,7 @@ buildFuelBtns(
 
 function initRouteMap() {
   if (routeMap) return;
-  routeMap = L.map("route-map");
+  routeMap = L.map("route-map").setView([50.5, 4.5], 8);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap",
     maxZoom: 19,
@@ -728,9 +761,20 @@ buildFuelBtns(
   id => { if (routeSamples) loadRouteStations(id); }
 );
 
+function showRouteStartDot(pos) {
+  routeMap.setView([pos.lat, pos.lng], 13);
+  setTimeout(() => {
+    if (routeStartMarker) { routeStartMarker.remove(); routeStartMarker = null; }
+    routeStartMarker = L.circleMarker([pos.lat, pos.lng], {
+      radius: 8, fillColor: "#22c55e", color: "#fff", weight: 2, fillOpacity: 1,
+    }).bindPopup("Vertrek").addTo(routeMap);
+  }, 50);
+}
+
 document.getElementById("use-gps-btn").addEventListener("click", () => {
   if (gpsPosition) {
     startInput.value = "Huidige locatie";
+    showRouteStartDot(gpsPosition);
     return;
   }
   startInput.value = "Locatie bepalen...";
@@ -740,6 +784,7 @@ document.getElementById("use-gps-btn").addEventListener("click", () => {
       gpsPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       startInput.value = "Huidige locatie";
       startInput.disabled = false;
+      showRouteStartDot(gpsPosition);
     },
     err => {
       startInput.value = "";
@@ -794,7 +839,8 @@ async function loadRouteStations(fuel) {
     console.log(`[route] stad: ${r.value.city}, stations: ${r.value.stations.length}`);
     for (const s of r.value.stations) {
       if (!allStations.has(s.id)) {
-        s.routeOffset = distToRoute(s.lat, s.lng, routeCoords);
+        s.routeOffset   = distToRoute(s.lat, s.lng, routeCoords);
+        s.routePosition = positionOnRoute(s.lat, s.lng, routeCoords);
         allStations.set(s.id, s);
       }
     }
@@ -819,7 +865,7 @@ async function loadRouteStations(fuel) {
   routeListEl.classList.add("hidden");
 
   setStatus(routeStatusEl, `${routeStations.length} stations langs de route`);
-  buildSortBtns(routeSortBtnsEl, () => routeSort, id => { routeSort = id; }, () => renderRoute());
+  buildSortBtns(routeSortBtnsEl, () => routeSort, id => { routeSort = id; }, () => renderRoute(), "Volgorde");
   routeSortBtnsEl.classList.add("hidden");
   buildBrandFilter(routeFuelEl, routeStations, () => routeBrand, id => { routeBrand = id; }, () => renderRoute());
   buildViewToggle(routeViewToggleEl, routeMapEl, routeListEl, () => routeView, id => { routeView = id; }, () => routeMap, (view) => {
@@ -938,3 +984,6 @@ if (!navigator.geolocation) {
   setStatus(statusEl, "Geolocation niet ondersteund door deze browser.", true);
 }
 // GPS wordt pas geladen wanneer de gebruiker naar "In de buurt" navigeert
+
+// Route kaart meteen initialiseren zodat het startscherm niet leeg is
+initRouteMap();
